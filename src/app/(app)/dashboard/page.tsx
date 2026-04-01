@@ -5,6 +5,7 @@ import { supabase, HistorialPedido, CatalogoPapel } from '@/lib/supabase-client'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Legend,
+    LineChart, Line,
 } from 'recharts';
 import { TrendingUp, TrendingDown, ShoppingCart, Layers, DollarSign, Package, Loader2, Inbox } from 'lucide-react';
 
@@ -106,6 +107,32 @@ export default function DashboardPage() {
         return Object.entries(counts).map(([name, value]) => ({ name, value: parseFloat(value.toFixed(2)) }));
     }, [pedidos]);
 
+    // All unique material types (same order as pie for consistent colors)
+    const materialTypes = useMemo(() => materialPie.map(m => m.name), [materialPie]);
+
+    // Investment evolution per paper type — last 6 months
+    const materialTrendData = useMemo(() => {
+        return Array.from({ length: 6 }, (_, i) => {
+            const d = new Date(curYear, curMonth - (5 - i), 1);
+            const m = d.getMonth();
+            const y = d.getFullYear();
+            const monthPedidos = pedidos.filter(p => {
+                const dd = new Date(p.fecha);
+                return dd.getMonth() === m && dd.getFullYear() === y;
+            });
+            const entry: Record<string, number | string> = { name: monthLabel(m) };
+            materialTypes.forEach(mat => {
+                entry[mat] = parseFloat(
+                    monthPedidos
+                        .filter(p => (p.catalogo_papel?.material ?? 'Otro') === mat)
+                        .reduce((s, p) => s + Number(p.precio_pagado), 0)
+                        .toFixed(2)
+                );
+            });
+            return entry;
+        });
+    }, [pedidos, curMonth, curYear, materialTypes]);
+
     // Price evolution for selected paper
     const priceEvo = useMemo(() => {
         if (!selectedPaperId) return [];
@@ -143,7 +170,7 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
 
             {/* Header */}
             <div>
@@ -185,7 +212,7 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Trend + Pie */}
+            {/* Row 1: Gasto total + Pie */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* 6-month spend trend */}
@@ -194,8 +221,8 @@ export default function DashboardPage() {
                         Gasto últimos 6 meses
                     </h2>
                     {trendData.some(d => d.gasto > 0) ? (
-                        <ResponsiveContainer width="100%" height={220}>
-                            <AreaChart data={trendData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <AreaChart data={trendData} margin={{ top: 4, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="gastoGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
@@ -210,7 +237,7 @@ export default function DashboardPage() {
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[220px] text-gray-300">
+                        <div className="flex flex-col items-center justify-center h-[200px] text-gray-300">
                             <Inbox size={36} className="mb-2" /><span>Sin datos</span>
                         </div>
                     )}
@@ -222,24 +249,66 @@ export default function DashboardPage() {
                         Gasto por Material
                     </h2>
                     {materialPie.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
-                                <Pie data={materialPie} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                                <Pie data={materialPie} cx="50%" cy="45%" innerRadius={45} outerRadius={72} paddingAngle={3} dataKey="value">
                                     {materialPie.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                 </Pie>
                                 <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${fmt(Number(v))} €`, '']} />
-                                <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 12, color: '#6b7280' }}>{v}</span>} />
+                                <Legend iconType="circle" iconSize={8} formatter={(v) => <span style={{ fontSize: 11, color: '#6b7280' }}>{v}</span>} />
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[220px] text-gray-300">
+                        <div className="flex flex-col items-center justify-center h-[200px] text-gray-300">
                             <Inbox size={36} className="mb-2" /><span>Sin datos</span>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Top materials + Price Evo */}
+            {/* Row 2: Investment evolution per paper type */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                    Evolución de inversión por tipo de papel
+                </h2>
+                <p className="text-xs text-gray-300 mb-5">Últimos 6 meses · en euros</p>
+                {materialTypes.length > 0 && materialTrendData.some(d => materialTypes.some(m => Number(d[m]) > 0)) ? (
+                    <ResponsiveContainer width="100%" height={260}>
+                        <LineChart data={materialTrendData} margin={{ top: 4, right: 20, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}€`} />
+                            <Tooltip
+                                contentStyle={tooltipStyle}
+                                formatter={(v, name) => [`${fmt(Number(v))} €`, name as string]}
+                            />
+                            <Legend
+                                iconType="circle"
+                                iconSize={8}
+                                wrapperStyle={{ paddingTop: 16 }}
+                                formatter={(v) => <span style={{ fontSize: 12, color: '#6b7280' }}>{v}</span>}
+                            />
+                            {materialTypes.map((mat, i) => (
+                                <Line
+                                    key={mat}
+                                    type="monotone"
+                                    dataKey={mat}
+                                    stroke={COLORS[i % COLORS.length]}
+                                    strokeWidth={2.5}
+                                    dot={{ r: 4, fill: COLORS[i % COLORS.length], stroke: 'white', strokeWidth: 2 }}
+                                    activeDot={{ r: 6, stroke: 'white', strokeWidth: 2 }}
+                                />
+                            ))}
+                        </LineChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-[260px] text-gray-300">
+                        <Inbox size={36} className="mb-2" /><span>Sin datos para mostrar</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Row 3: Top materials + Price Evo */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Top 5 materials bar chart */}
@@ -248,7 +317,7 @@ export default function DashboardPage() {
                         Top Materiales este mes <span className="text-gray-300">(por unidades)</span>
                     </h2>
                     {topMaterials.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={topMaterials} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="barGrad" x1="0" y1="0" x2="1" y2="0">
@@ -264,7 +333,7 @@ export default function DashboardPage() {
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[220px] text-gray-300">
+                        <div className="flex flex-col items-center justify-center h-[200px] text-gray-300">
                             <Package size={36} className="mb-2" /><span>Sin pedidos este mes</span>
                         </div>
                     )}
@@ -288,7 +357,7 @@ export default function DashboardPage() {
                         ))}
                     </select>
                     {selectedPaperId && priceEvo.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={170}>
+                        <ResponsiveContainer width="100%" height={150}>
                             <AreaChart data={priceEvo} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
@@ -304,11 +373,11 @@ export default function DashboardPage() {
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : selectedPaperId ? (
-                        <div className="flex flex-col items-center justify-center h-[170px] text-gray-300">
+                        <div className="flex flex-col items-center justify-center h-[150px] text-gray-300">
                             <Inbox size={28} className="mb-2" /><span className="text-sm">Sin historial para este papel</span>
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[170px] text-gray-300">
+                        <div className="flex flex-col items-center justify-center h-[150px] text-gray-300">
                             <span className="text-sm">Selecciona un papel</span>
                         </div>
                     )}
