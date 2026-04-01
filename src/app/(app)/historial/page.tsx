@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { supabase, HistorialPedido } from '@/lib/supabase';
+import { supabase, HistorialPedido } from '@/lib/supabase-client';
 import {
     ClipboardList,
     Search,

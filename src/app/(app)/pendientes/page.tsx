@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase, HistorialPedido } from '@/lib/supabase';
+import { supabase, HistorialPedido } from '@/lib/supabase-client';
 import {
     Clock,
     CheckCircle2,

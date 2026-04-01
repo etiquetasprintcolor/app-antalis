@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Download, Clock, CalendarDays, Loader2, AlertCircle, Play, X, TrendingUp } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import {
     LineChart,
     Line,
@@ -88,7 +88,7 @@ export default function AnalisisPage() {
                         setLatestReport({
                             name: file.name,
                             url: publicUrlData.publicUrl,
-                            date: new Date(file.created_at)
+                            date: new Date(file.created_at || Date.now())
                         });
                     }
                 }

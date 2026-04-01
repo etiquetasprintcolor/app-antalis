@@ -1,28 +1,39 @@
 import AppShell from '@/components/AppShell';
-import { createSupabaseServerClient, WHITELIST } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { CookieOptions } from '@supabase/ssr';
 
 export default async function AppLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    console.log('--- SECURITY CHECK IN AppLayout ---');
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
 
-    console.log('User detected in layout:', user ? user.email : 'NONE');
-
-    if (!user) {
-        console.log('NO USER -> REDIRECTING TO /login');
-        redirect('/login');
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try { cookieStore.set({ name, value, ...options }); } catch {}
+        },
+        remove(name: string, options: CookieOptions) {
+          try { cookieStore.set({ name, value: '', ...options }); } catch {}
+        },
+      },
     }
+  );
 
-    if (!WHITELIST.includes(user.email || '')) {
-        console.log('USER NOT IN WHITELIST -> SIGN OUT AND REDIRECT');
-        await supabase.auth.signOut();
-        redirect('/login?error=unauthorized');
-    }
+  const { data: { user } } = await supabase.auth.getUser();
 
-    return <AppShell>{children}</AppShell>;
+  if (!user) {
+    redirect('/login');
+  }
+
+  return <AppShell>{children}</AppShell>;
 }

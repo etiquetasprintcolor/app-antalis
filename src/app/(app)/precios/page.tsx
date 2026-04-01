@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase, CatalogoPapel } from '@/lib/supabase';
+import { supabase, CatalogoPapel } from '@/lib/supabase-client';
 import {
     DollarSign,
     Loader2,

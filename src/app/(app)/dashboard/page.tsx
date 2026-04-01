@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase, HistorialPedido, CatalogoPapel } from '@/lib/supabase';
+import { supabase, HistorialPedido, CatalogoPapel } from '@/lib/supabase-client';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Legend,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { supabase, CatalogoPapel } from '@/lib/supabase';
+import { supabase, CatalogoPapel } from '@/lib/supabase-client';
 import {
     Calculator,
     Package,

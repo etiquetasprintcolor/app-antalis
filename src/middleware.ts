@@ -1,15 +1,23 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { WHITELIST } from '@/lib/supabase';
+// Public paths that don't require authentication
+const PUBLIC_PATHS = ['/login'];
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow public paths through immediately
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
+  // NOTE: This client is self-contained and does NOT import from @/lib/supabase
+  // because next/headers is NOT compatible with the Edge Runtime used by middleware.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,77 +27,41 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+          request.cookies.set({ name, value, ...options });
+          response = NextResponse.next({ request: { headers: request.headers } });
+          response.cookies.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
+          request.cookies.set({ name, value: '', ...options });
+          response = NextResponse.next({ request: { headers: request.headers } });
+          response.cookies.set({ name, value: '', ...options });
         },
       },
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // getUser() verifies the JWT with Supabase — this is the secure check
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-  // If user is not logged in and trying to access app routes
-  if (!user && !['/login', '/auth/callback'].includes(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Whitelist check
-  if (user && !WHITELIST.includes(user.email || '')) {
-    await supabase.auth.signOut();
+  // If no valid session, force redirect to login
+  if (error || !user) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('error', 'unauthorized');
     return NextResponse.redirect(loginUrl);
   }
 
-  // If logged in and trying to access login page
-  if (user && request.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/calculadora', request.url));
-  }
-
+  // User is authenticated — allow through
   return response;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - login (login page)
-     * - auth/callback (auth callback)
+     * Match ALL paths EXCEPT:
+     * - _next/static (Next.js static files)
+     * - _next/image (image optimization)
+     * - favicon.ico
+     * - /login (login page itself)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|login|auth/callback).*)',
+    '/((?!_next/static|_next/image|favicon.ico|login).*)',
   ],
 };
