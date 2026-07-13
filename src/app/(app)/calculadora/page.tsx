@@ -491,7 +491,7 @@ export default function CalculadoraPage() {
                         </label>
                         <input
                             type="number"
-                            min="1"
+                            min="2"
                             step="2"
                             value={paginasPorLibro}
                             onChange={(e) => setPaginasPorLibro(e.target.value ? parseInt(e.target.value) : '')}

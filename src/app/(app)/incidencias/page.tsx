@@ -422,7 +422,7 @@ export default function IncidenciasPage() {
                   </label>
                   <input
                     type="number"
-                    min="1"
+                    min="2"
                     step="2"
                     required
                     value={paginasPorLibro}
