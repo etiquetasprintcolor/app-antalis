@@ -34,3 +34,27 @@ export const WHITELIST = [
   'compras@printcolorweb.com',
   'produccion@printcolorweb.com',
 ];
+
+export interface Incidencia {
+  id: number;
+  fecha: string;
+  id_catalogo: number;
+  motivo: string;
+  cantidad_libros: number;
+  paginas_por_libro: number;
+  formato_libro: string;
+  hojas_gastadas: number;
+  coste_estimado: number;
+  observaciones: string | null;
+  created_at?: string;
+  catalogo_papel?: CatalogoPapel;
+}
+
+export const MOTIVOS_INCIDENCIA = [
+  'Manchas en la impresión',
+  'Libros mal cortados',
+  'Mala selección del papel',
+  'Libros manchados post impresión',
+  'Desajuste de color',
+  'Laminado erróneo',
+] as const;

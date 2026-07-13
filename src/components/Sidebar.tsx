@@ -14,6 +14,7 @@ import {
     DollarSign,
     FileText,
     LogOut,
+    AlertTriangle,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ const navItems = [
     { href: '/pendientes', label: 'Pendientes', icon: Clock },
     { href: '/historial', label: 'Historial', icon: ClipboardList },
     { href: '/precios', label: 'Precios', icon: DollarSign },
+    { href: '/incidencias', label: 'Incidencias', icon: AlertTriangle },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/analisis', label: 'Análisis', icon: FileText },
 ];

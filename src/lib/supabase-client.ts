@@ -1,8 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr';
 
 // Re-export types so client components can import from here
-export type { CatalogoPapel, HistorialPedido } from './types';
-export { WHITELIST } from './types';
+export type { CatalogoPapel, HistorialPedido, Incidencia } from './types';
+export { WHITELIST, MOTIVOS_INCIDENCIA } from './types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';

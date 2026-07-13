@@ -65,5 +65,22 @@ CREATE TABLE IF NOT EXISTS historial_precios_catalogo (
   fecha_registro TIMESTAMPTZ DEFAULT now()
 );
 
--- Index for plotting historical charts efficiently per paper
-CREATE INDEX idx_historial_precios_papel ON historial_precios_catalogo(id_papel, fecha_registro DESC);
+-- ============================================================
+-- 4. Historial de Incidencias
+-- ============================================================
+-- Tracks production issues and paper wasted
+CREATE TABLE IF NOT EXISTS incidencias (
+  id SERIAL PRIMARY KEY,
+  fecha TIMESTAMPTZ DEFAULT now(),
+  id_catalogo INTEGER NOT NULL REFERENCES catalogo_papel(id) ON DELETE CASCADE,
+  motivo TEXT NOT NULL,
+  cantidad_libros INTEGER NOT NULL,
+  paginas_por_libro INTEGER NOT NULL,
+  formato_libro TEXT NOT NULL,
+  hojas_gastadas NUMERIC(10,2) NOT NULL,
+  coste_estimado NUMERIC(10,2) NOT NULL,
+  observaciones TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_incidencias_fecha ON incidencias(fecha DESC);
