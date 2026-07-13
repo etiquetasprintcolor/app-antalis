@@ -53,8 +53,10 @@ export interface Incidencia {
 export const MOTIVOS_INCIDENCIA = [
   'Manchas en la impresión',
   'Libros mal cortados',
+  'Interior mal cortado',
   'Mala selección del papel',
   'Libros manchados post impresión',
   'Desajuste de color',
   'Laminado erróneo',
+  'Otros',
 ] as const;
