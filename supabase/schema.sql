@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS incidencias (
   id SERIAL PRIMARY KEY,
   fecha TIMESTAMPTZ DEFAULT now(),
   id_catalogo INTEGER NOT NULL REFERENCES catalogo_papel(id) ON DELETE CASCADE,
+  numero_pedido TEXT,
   motivo TEXT NOT NULL,
   cantidad_libros INTEGER NOT NULL,
   paginas_por_libro INTEGER NOT NULL,

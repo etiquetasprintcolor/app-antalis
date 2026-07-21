@@ -39,6 +39,7 @@ export interface Incidencia {
   id: number;
   fecha: string;
   id_catalogo: number;
+  numero_pedido?: string;
   motivo: string;
   cantidad_libros: number;
   paginas_por_libro: number;

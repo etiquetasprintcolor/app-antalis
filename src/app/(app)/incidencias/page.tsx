@@ -40,6 +40,7 @@ export default function IncidenciasPage() {
   const [materialFilter, setMaterialFilter] = useState('');
   const [gramajeFilter, setGramajeFilter] = useState<number | ''>('');
   const [selectedPaper, setSelectedPaper] = useState<CatalogoPapel | null>(null);
+  const [numeroPedido, setNumeroPedido] = useState('');
   const [motivo, setMotivo] = useState<string>(MOTIVOS_INCIDENCIA[0]);
   const [observaciones, setObservaciones] = useState('');
 
@@ -179,6 +180,7 @@ export default function IncidenciasPage() {
           formato_libro: formatoLibro,
           hojas_gastadas: hojasGastadas,
           coste_estimado: coste,
+          numero_pedido: numeroPedido.trim() || null,
           observaciones: observaciones.trim() || null
         })
         .select('*, catalogo_papel(*)')
@@ -204,6 +206,7 @@ export default function IncidenciasPage() {
             paginasPorLibro: calculos.paginas,
             hojasGastadas,
             costeEstimado: coste,
+            numeroPedido: numeroPedido.trim() || null,
             motivo,
             observaciones: observaciones.trim() || null
           })
@@ -221,6 +224,7 @@ export default function IncidenciasPage() {
       setSaveMessage('Incidencia registrada y correo enviado correctamente.');
       setCantLibros('');
       setPaginasPorLibro('');
+      setNumeroPedido('');
       setObservaciones('');
 
       setTimeout(() => {
@@ -432,6 +436,20 @@ export default function IncidenciasPage() {
                   />
                 </div>
 
+                {/* Número de Pedido */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
+                    Número de Pedido (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={numeroPedido}
+                    onChange={(e) => setNumeroPedido(e.target.value)}
+                    placeholder="Ej. P123456"
+                    className="w-full px-3 py-2.5 border border-[var(--border-color)] rounded-lg text-sm bg-white text-[var(--foreground)] placeholder-[var(--muted)] focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] transition-all outline-none"
+                  />
+                </div>
+
                 {/* Motivo de la Incidencia */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
@@ -573,6 +591,7 @@ export default function IncidenciasPage() {
               <thead>
                 <tr className="border-b border-gray-100 text-[var(--muted)] text-xs font-semibold uppercase tracking-wider">
                   <th className="py-3 px-4">Fecha</th>
+                  <th className="py-3 px-4">Pedido</th>
                   <th className="py-3 px-4">Motivo</th>
                   <th className="py-3 px-4">Papel utilizado</th>
                   <th className="py-3 px-4 text-right">Cantidad Libros</th>
@@ -596,6 +615,9 @@ export default function IncidenciasPage() {
                           minute: '2-digit'
                         })}
                       </div>
+                    </td>
+                    <td className="py-3.5 px-4 font-medium text-gray-700">
+                      {item.numero_pedido || '—'}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-red-600">
                       {item.motivo}

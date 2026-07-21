@@ -13,7 +13,8 @@ export async function POST(req: Request) {
       hojasGastadas,
       costeEstimado,
       motivo,
-      observaciones
+      observaciones,
+      numeroPedido
     } = data;
 
     // Validate required fields
@@ -61,6 +62,10 @@ export async function POST(req: Request) {
           <!-- Main Stats -->
           <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 6px 0; color: #6b7280; font-weight: 500;">Número de Pedido:</td>
+                <td style="padding: 6px 0; color: #111827; font-weight: 600; text-align: right;">${numeroPedido || 'N/A'}</td>
+              </tr>
               <tr>
                 <td style="padding: 6px 0; color: #6b7280; font-weight: 500;">Motivo de Incidencia:</td>
                 <td style="padding: 6px 0; color: #dc2626; font-weight: 700; text-align: right;">${motivo}</td>
@@ -126,7 +131,7 @@ export async function POST(req: Request) {
     const info = await transporter.sendMail({
       from: `"Printcolor App — Incidencias" <${process.env.EMAIL_USER}>`,
       to: 'archivos@printcolorweb.com',
-      subject: `⚠️ Incidencia Interna — ${motivo}`,
+      subject: `⚠️ Incidencia Interna — ${motivo}${numeroPedido ? ` (Pedido: ${numeroPedido})` : ''}`,
       html: htmlContent,
     });
 
